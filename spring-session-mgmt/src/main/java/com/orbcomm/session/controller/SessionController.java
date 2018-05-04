@@ -1,19 +1,24 @@
 package com.orbcomm.session.controller;
 
+import java.util.Collection;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.orbcomm.session.service.LoginService;
-import com.orbcomm.session.service.UserService;
+import com.orbcomm.session.service.impl.LoginService;
+import com.orbcomm.session.service.impl.UserService;
 import com.orbcomm.session.vo.ForgotPasswordResponse;
 import com.orbcomm.session.vo.LoginResponse;
-import com.orbcomm.session.vo.SSOResponse;
+import com.orbcomm.session.vo.SSOToken;
 import com.orbcomm.session.vo.Session;
 import com.orbcomm.session.vo.User;
+import com.orbcomm.sesssion.cache.TokenManager;
 
 @RestController
 public class SessionController {
@@ -39,8 +44,8 @@ public class SessionController {
 	public LoginResponse login(@RequestBody User user)
 	{
 		Session session=new Session();
-		//getUserService().validateUser(user);
-		SSOResponse response=getLoginService().login(user);
+		getUserService().validateUser(user);
+		SSOToken response=getLoginService().login(user);
 		session.setAccessToken(response.getAccessToken());
 		
 		LoginResponse loginResponse=new LoginResponse();
@@ -57,5 +62,12 @@ public class SessionController {
 		ForgotPasswordResponse response=new ForgotPasswordResponse();
 		response.setMessage("new password has been sent to "+user.getEmail());
 		return response;
+	}
+	
+	@GetMapping(value = "/tokens", produces = MediaType.APPLICATION_JSON_VALUE)
+	@ResponseBody
+	public Collection<SSOToken> getTokens()
+	{
+		return TokenManager.tokens.values();
 	}
 }

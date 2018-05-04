@@ -20,10 +20,11 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
 		return new ResponseEntity<>(errorDetails, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
-	@ExceptionHandler(ValidationException.class)
-	public final ResponseEntity<ErrorDetails> handleUserNotFoundException(ValidationException ex, WebRequest request) {
-		ErrorDetails errorDetails = new ErrorDetails(ex.getMessage(), request.getDescription(false));
-		return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+	@ExceptionHandler(UserValidationException.class)
+	public final ResponseEntity<LoginResponse> handleUserNotFoundException(UserValidationException ex, WebRequest request) {
+		LoginResponse loginResponse = new LoginResponse();
+		loginResponse.setDesc(ex.getMessage());
+		return new ResponseEntity<>(loginResponse, HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler(AuthenticationFailedException.class)

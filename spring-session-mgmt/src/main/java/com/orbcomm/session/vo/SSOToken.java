@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @author ntalari
  *
  */
-public class SSOResponse {
+public class SSOToken {
 	
 	private String accessToken;
 	private String tokenType;
@@ -19,6 +19,8 @@ public class SSOResponse {
 	private String cleartext;
 	private String issued;
 	private String expires;
+	
+	private String userName;
 	
 	
 	/**
@@ -123,6 +125,19 @@ public class SSOResponse {
 	 */
 	public void setExpires(String expires) {
 		this.expires = expires;
+	}
+	/**
+	 * @return the userName
+	 */
+	public String getUserName() {
+		return userName;
+	}
+	/**
+	 * @param userName the userName to set
+	 */
+	@JsonProperty("user_name")
+	public void setUserName(String userName) {
+		this.userName = userName;
 	}
 	
 }

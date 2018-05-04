@@ -3,7 +3,7 @@
  */
 package com.orbcomm.session.service;
 
-import com.orbcomm.session.vo.SSOResponse;
+import com.orbcomm.session.vo.SSOToken;
 import com.orbcomm.session.vo.User;
 
 /**
@@ -12,6 +12,6 @@ import com.orbcomm.session.vo.User;
  */
 public interface ILoginService {
 	
-	public SSOResponse login(User user);
+	public SSOToken login(User user);
 
 }

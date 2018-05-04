@@ -10,6 +10,7 @@ public class Session {
 	/**
 	 * @return the acces_token
 	 */
+	@JsonProperty("access_token")
 	public String getAccessToken() {
 		return accessToken;
 	}
