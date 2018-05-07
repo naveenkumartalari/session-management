@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.orbcomm.session.constants.AppConstant;
 import com.orbcomm.session.service.impl.LoginService;
-import com.orbcomm.session.service.impl.UserService;
 import com.orbcomm.session.util.DateUtil;
 import com.orbcomm.session.vo.SSOToken;
 import com.orbcomm.session.vo.Session;

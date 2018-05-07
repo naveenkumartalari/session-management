@@ -3,8 +3,8 @@
  */
 package com.orbcomm.sesssion.cache;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import com.orbcomm.session.vo.SSOToken;
 
@@ -14,7 +14,7 @@ import com.orbcomm.session.vo.SSOToken;
  */
 public class TokenManager {
 	
-	public static Map<String, SSOToken> tokens=new ConcurrentHashMap<>();
+	public static Map<String, SSOToken> tokens=new HashMap<>();
 	
 	public static boolean addToken(SSOToken token) {
 		 return tokens.put(token.getAccessToken(), token)==null;
