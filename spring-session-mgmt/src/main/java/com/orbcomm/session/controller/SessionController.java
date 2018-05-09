@@ -1,6 +1,7 @@
 package com.orbcomm.session.controller;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,25 +15,30 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.orbcomm.session.constants.AppConstant;
+import com.orbcomm.session.response.vo.LoginResponse;
 import com.orbcomm.session.service.impl.LoginService;
+import com.orbcomm.session.service.impl.MenuManagementService;
 import com.orbcomm.session.service.impl.UserService;
-import com.orbcomm.session.vo.ForgotPasswordResponse;
-import com.orbcomm.session.vo.LoginResponse;
+import com.orbcomm.session.vo.CacheData;
+import com.orbcomm.session.vo.Data;
+import com.orbcomm.session.vo.Menu;
 import com.orbcomm.session.vo.SSOToken;
 import com.orbcomm.session.vo.Session;
 import com.orbcomm.session.vo.User;
-import com.orbcomm.sesssion.cache.TokenManager;
+import com.orbcomm.sesssion.cache.CacheManager;
 
-@RestController
 /**
- * This class is used for managing the sessions(SSO Token). Like get access token when user logs in first time, 
- * refresh token, remove token upon logout of user. 
- * This class also can able to display the cached tokens based on rest call request.
+ * This class is used for managing the sessions(SSO Token). Like get access
+ * token when user logs in first time, refresh token, remove token upon logout
+ * of user. This class also can able to display the cached tokens based on rest
+ * call request.
+ * 
  * @author ntalari
  *
  */
+@RestController
 public class SessionController {
-	
+
 	private static final Logger log = LogManager.getLogger(SessionController.class);
 
 	@Autowired
@@ -41,6 +47,8 @@ public class SessionController {
 	@Autowired
 	private LoginService loginService;
 
+	@Autowired
+	private MenuManagementService menuManagementService;
 	/**
 	 * @return the userService
 	 */
@@ -52,27 +60,56 @@ public class SessionController {
 		return loginService;
 	}
 
+	/**
+	 * @return the menuManagementService
+	 */
+	public MenuManagementService getMenuManagementService() {
+		return menuManagementService;
+	}
+
+
 	@RequestMapping(value = "/login", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	public LoginResponse login(@RequestBody User user) {
-		Session session = new Session();
+		
 		getUserService().validateUser(user);
+		
+		//calling SSO server to get the token
 		SSOToken token = getLoginService().login(user);
+		
+		Session session = new Session();
 		session.setAccessToken(token.getAccessToken());
 		session.setExpires(token.getExpires());
 		session.setIssued(token.getIssued());
 		session.setExpiresIn(token.getExpiresIn());
+		
+		//calling Menu Management service to get user menus
+		List<Menu> menus= getMenuManagementService().getMenu(user);
+		
+		// Adding token and menu info to cache
+		CacheData cacheData=new CacheData();
+		cacheData.setToken(token);
+		cacheData.setMenus(menus);
+		CacheManager.addToCache(cacheData);
+		
+		//preparing response object
+		Data data=new Data();
+		data.setAuthInfo(session);
+		data.setMenus(menus);
 
 		LoginResponse loginResponse = new LoginResponse();
 		loginResponse.setResponse("success");
-		loginResponse.setData(session);
+		loginResponse.setData(data);
 		loginResponse.setDesc("user logged in successfully");
+		
 		return loginResponse;
 	}
 
 	@RequestMapping(value = "/refreshtoken", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	public Session refreshToken(@RequestBody Session session) {
 
-		SSOToken token = TokenManager.getToken(session.getAccessToken());
+		CacheData data = CacheManager.getFromCache(session.getAccessToken());
+		SSOToken token = data.getToken();
+				
 		if (token == null)
 			throw new RuntimeException("invalid access token");
 
@@ -84,10 +121,15 @@ public class SessionController {
 		user.setRefreshToken(token.getRefreshToken());
 		user.setUserName(token.getUserName());
 
+		//calling SSO server to get new token
 		SSOToken newToken = getLoginService().getSSOToken(user);
-
-		TokenManager.removeToken(token);// removing old token from cache as it got expired
-		TokenManager.addToken(newToken);// adding new token to the cache
+		
+		CacheData newData=new CacheData();
+		newData.setMenus(data.getMenus());
+		newData.setToken(newToken);
+		
+		CacheManager.removeFromCache(token.getAccessToken());// removing old token from cache as it got expired
+		CacheManager.addToCache(newData);// adding new token to the cache
 
 		// }
 
@@ -98,15 +140,16 @@ public class SessionController {
 
 		return session;
 	}
-	
+
 	@RequestMapping(value = "/logout", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	public void logout(@RequestBody Session session) {
 
-		SSOToken token = TokenManager.getToken(session.getAccessToken());
+		CacheData data = CacheManager.getFromCache(session.getAccessToken());
+		SSOToken token = data.getToken();
 		if (token == null) {
 			log.error("token is not present in cache");
-		}else {
-			TokenManager.removeToken(token);
+		} else {
+			CacheManager.removeFromCache(session.getAccessToken());
 			log.info("token has been removed from cache");
 		}
 
@@ -114,7 +157,7 @@ public class SessionController {
 
 	@GetMapping(value = "/tokens", produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
-	public Collection<SSOToken> getTokens() {
-		return TokenManager.tokens.values();
+	public Collection<CacheData> getTokens() {
+		return CacheManager.cacheData.values();
 	}
 }

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.orbcomm.session.vo;
+package com.orbcomm.session.response.vo;
 
 /**
  * @author ntalari

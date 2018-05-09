@@ -8,7 +8,7 @@ public class Session {
 	private String issued;
 	private String expires;
 	private int expiresIn;
-
+	
 	/**
 	 * @return the acces_token
 	 */
@@ -70,5 +70,5 @@ public class Session {
 	public void setExpiresIn(int expires_in) {
 		this.expiresIn = expires_in;
 	}
-	
+
 }

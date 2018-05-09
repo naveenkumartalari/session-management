@@ -1,7 +1,9 @@
 /**
  * 
  */
-package com.orbcomm.session.vo;
+package com.orbcomm.session.response.vo;
+
+import com.orbcomm.session.vo.Data;
 
 /**
  * @author ntalari
@@ -9,8 +11,8 @@ package com.orbcomm.session.vo;
  */
 public class LoginResponse {
 
-	private String response = "failure";// make id default to failure in case of exceptions
-	private Session data;
+	private String response = "failure";// make it default to failure in case of exceptions
+	private Data data;
 	private String desc;
 
 	/**
@@ -31,9 +33,9 @@ public class LoginResponse {
 	/**
 	 * @return the data
 	 */
-	public Session getData() {
+	public Data getData() {
 		if (data == null)
-			data = new Session();
+			data = new Data();
 		return data;
 	}
 
@@ -41,7 +43,7 @@ public class LoginResponse {
 	 * @param data
 	 *            the data to set
 	 */
-	public void setData(Session data) {
+	public void setData(Data data) {
 		this.data = data;
 	}
 

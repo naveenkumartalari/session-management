@@ -3,6 +3,8 @@
  */
 package com.orbcomm.session.vo;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -21,7 +23,6 @@ public class SSOToken {
 	private String expires;
 	
 	private String userName;
-	
 	
 	/**
 	 * @return the acces_token

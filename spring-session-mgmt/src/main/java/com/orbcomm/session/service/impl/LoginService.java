@@ -63,9 +63,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.orbcomm.session.exception.AuthenticationFailedException;
 import com.orbcomm.session.exception.UserValidationException;
 import com.orbcomm.session.service.ILoginService;
+import com.orbcomm.session.vo.CacheData;
 import com.orbcomm.session.vo.SSOToken;
 import com.orbcomm.session.vo.User;
-import com.orbcomm.sesssion.cache.TokenManager;
+import com.orbcomm.sesssion.cache.CacheManager;
 
 /**
  * @author ntalari
@@ -81,6 +82,12 @@ public class LoginService implements ILoginService {
 		log.info("login(User user): starts");
 
 		SSOToken token = getSSOToken(user);
+		
+		CacheData data=new CacheData();
+		data.setToken(token);
+
+		// Adding token to cache
+		CacheManager.addToCache(data);
 
 		log.info("login(User user): ends");
 		return token;
@@ -128,14 +135,11 @@ public class LoginService implements ILoginService {
 			 * converting JSON (SSO's) response to Java object (SSOResponse)
 			 */
 			ObjectMapper mapper = new ObjectMapper();
-			SSOToken ssoResp = mapper.readValue(IOUtils.toString(response.getEntity().getContent()),
+			SSOToken token = mapper.readValue(IOUtils.toString(response.getEntity().getContent()),
 					SSOToken.class);
-			ssoResp.setUserName(user.getUserName());
-
-			// Adding token to cache
-			TokenManager.addToken(ssoResp);
-
-			return ssoResp;
+			token.setUserName(user.getUserName());
+			
+			return token;
 		} catch (Exception e) {
 			throw new AuthenticationFailedException(E_AF, e);
 		} finally {

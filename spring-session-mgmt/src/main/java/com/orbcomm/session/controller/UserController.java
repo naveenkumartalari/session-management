@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.orbcomm.session.response.vo.ForgotPasswordResponse;
 import com.orbcomm.session.service.impl.UserService;
-import com.orbcomm.session.vo.ForgotPasswordResponse;
 import com.orbcomm.session.vo.User;
 
 /**
