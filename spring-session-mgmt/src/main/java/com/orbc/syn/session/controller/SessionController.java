@@ -49,6 +49,7 @@ public class SessionController {
 
 	@Autowired
 	private MenuManagementService menuManagementService;
+
 	/**
 	 * @return the userService
 	 */
@@ -67,49 +68,48 @@ public class SessionController {
 		return menuManagementService;
 	}
 
-
 	@RequestMapping(value = "/login", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	public LoginResponse login(@RequestBody User user) {
-		
+
 		getUserService().validateUser(user);
-		
-		//calling SSO server to get the token
+
+		// calling SSO server to get the token
 		SSOToken token = getLoginService().login(user);
-		
+
 		Session session = new Session();
 		session.setAccessToken(token.getAccessToken());
 		session.setExpires(token.getExpires());
 		session.setIssued(token.getIssued());
 		session.setExpiresIn(token.getExpiresIn());
-		
-		//calling Menu Management service to get user menus
-		List<Menu> menus= getMenuManagementService().getMenu(user);
-		
+
+		// calling Menu Management service to get user menus
+		List<Menu> menus = getMenuManagementService().getMenu(user);
+
 		// Adding token and menu info to cache
-		CacheData cacheData=new CacheData();
+		CacheData cacheData = new CacheData();
 		cacheData.setToken(token);
 		cacheData.setMenus(menus);
 		CacheManager.addToCache(cacheData);
-		
-		//preparing response object
-		Data data=new Data();
+
+		// preparing response object
+		Data data = new Data();
 		data.setAuthInfo(session);
 		data.setMenus(menus);
 
 		LoginResponse loginResponse = new LoginResponse();
-		loginResponse.setResponse("success");
+		loginResponse.setResponse(AppConstants.SUCCESS);
 		loginResponse.setData(data);
 		loginResponse.setDesc("user logged in successfully");
-		
+
 		return loginResponse;
 	}
 
 	@RequestMapping(value = "/refreshtoken", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-	public Session refreshToken(@RequestBody Session session) {
+	public LoginResponse refreshToken(@RequestBody Session session) {
 
-		CacheData data = CacheManager.getFromCache(session.getAccessToken());
-		SSOToken token = data.getToken();
-				
+		CacheData cacheData = CacheManager.getFromCache(session.getAccessToken());
+		SSOToken token = cacheData.getToken();
+
 		if (token == null)
 			throw new RuntimeException("invalid access token");
 
@@ -121,13 +121,13 @@ public class SessionController {
 		user.setRefreshToken(token.getRefreshToken());
 		user.setUserName(token.getUserName());
 
-		//calling SSO server to get new token
+		// calling SSO server to get new token
 		SSOToken newToken = getLoginService().getSSOToken(user);
-		
-		CacheData newData=new CacheData();
-		newData.setMenus(data.getMenus());
+
+		CacheData newData = new CacheData();
+		newData.setMenus(cacheData.getMenus());
 		newData.setToken(newToken);
-		
+
 		CacheManager.removeFromCache(token.getAccessToken());// removing old token from cache as it got expired
 		CacheManager.addToCache(newData);// adding new token to the cache
 
@@ -138,7 +138,16 @@ public class SessionController {
 		session.setIssued(newToken.getIssued());
 		session.setExpiresIn(newToken.getExpiresIn());
 
-		return session;
+		// preparing response object
+		Data data = new Data();
+		data.setAuthInfo(session);
+
+		LoginResponse loginResponse = new LoginResponse();
+		loginResponse.setResponse(AppConstants.SUCCESS);
+		loginResponse.setData(data);
+		loginResponse.setDesc("token refreshed");
+
+		return loginResponse;
 	}
 
 	@RequestMapping(value = "/logout", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
